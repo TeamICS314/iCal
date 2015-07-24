@@ -20,7 +20,7 @@ public class ICal
 		{
 			//Ask if user want to create a .ics file or read in files to compute GCD(great circle distance)
 			System.out.println("Menu: ");
-			System.out.println("1. Create a new .ics file");
+			System.out.println("1. Create .ics files with one event in each file");
 			System.out.println("2. Read in .ics files and compute GCD(greate circle distance)");
 			Scanner sc = new Scanner(System.in);
 			int userInput = sc.nextInt();
@@ -163,25 +163,40 @@ public class ICal
 				
 				for(int i = 0; i < eventList.size(); i++)
 				{
+					//Get current event 
+					boolean GeoLoca = false;
 					Event e = eventList.get(i);
 					String parts[] = null;
+					
+					//if we are not at the end of the list get the next event
 					if(i < eventList.size() - 1)
 					{
 						Event ePlusOne = eventList.get(i + 1);
-						String distance = getDistance(e.longitude, e.latitude, ePlusOne.longitude, ePlusOne.latitude);
-						parts = distance.split(";");
+						//if both event contain GeoLocation information then we calculate distance
+						if(e.containGeoLocation == true && ePlusOne.containGeoLocation == true)
+						{
+							String distance = getDistance(e.longitude, e.latitude, ePlusOne.longitude, ePlusOne.latitude);
+							parts = distance.split(";");
+							GeoLoca = true;
+						}
 					}
 					String sh = String.format("%02d", e.startHour);
 					String sm = String.format("%02d", e.startMinute);
 					String eh = String.format("%02d", e.endHour);
 					String em = String.format("%02d", e.endMinute);
 					System.out.println("Event " + i + ": " + sh + ":" + sm + "-" + eh + ":" + em);
-					if(i < eventList.size() - 1)
+					//if we are not at the end of the list and GeoLocation flag is set true, print out the distance
+					if(i < eventList.size() - 1 && GeoLoca == true)
 					{
 						DecimalFormat df = new DecimalFormat("0.00##");
 						String miles = df.format(Double.parseDouble(parts[0]));
 						String kilometers = df.format(Double.parseDouble(parts[1]));
 						System.out.println("Distance to next event: " + miles + " Miles, or " + kilometers + " Kilometers.\n");
+					}
+					//else we don't have enough info to calculate the distance.
+					else
+					{
+						System.out.println("Distance to next event: UNKNOWn");
 					}
 				}
 			}
