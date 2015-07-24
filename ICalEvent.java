@@ -34,7 +34,6 @@ public class ICalEvent
 		Event_Classification = getClassification(sc);
 		Event_Priority = getPriority(sc);
 		Event_GeoLocation = getGeoLocation(sc);
-		sc.close();
 	}
 	
 	private String getDTStart(Scanner sc)

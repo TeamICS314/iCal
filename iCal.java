@@ -1,7 +1,11 @@
 package iCal;
 
 import java.io.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ICal
 {
@@ -73,6 +77,7 @@ public class ICal
 			{
 				int fileCount = 0;
 				boolean done = false;
+				ArrayList<Event> eventList = new ArrayList<Event>();
 				while(!done)
 				{
 					System.out.println("Please input the name of the file to read from, e.g. calender.ics");
@@ -85,15 +90,98 @@ public class ICal
 					}
 					else
 					{
+						fileCount++;
 						try
 						{
 							BufferedReader reader = new BufferedReader(new FileReader(input));
+							boolean hasGeo = false;
+							float longitude = 0;
+							float latitude = 0;
 							String line = null;
+							int startHour = -1;
+							int startMinute = -1;
+							int endHour = -1;
+							int endMinute = -1;
+							while((line = reader.readLine()) != null)
+							{
+								if(line.startsWith("DTSTART"))
+								{
+									Pattern p = Pattern.compile("T\\d\\d\\d\\d\\d\\d");
+									Matcher m = p.matcher(line);
+									if(m.find())
+									{
+										String sh = m.group().substring(1, 3);
+										String sm = m.group().substring(3, 5);
+										startHour = Integer.parseInt(sh);
+										startMinute = Integer.parseInt(sm);
+									}
+								}
+								else if(line.startsWith("DTEND"))
+								{
+									Pattern p = Pattern.compile("T\\d\\d\\d\\d\\d\\d");
+									Matcher m = p.matcher(line);
+									if(m.find())
+									{
+										String eh = m.group().substring(1, 3);
+										String em = m.group().substring(3, 5);
+										endHour = Integer.parseInt(eh);
+										endMinute = Integer.parseInt(em);
+									}
+								}
+								else if(line.startsWith("GEO"))
+								{
+									String subString = line.substring(4);
+									String[] parts = subString.split(";");
+									latitude = Float.parseFloat(parts[0]);
+									longitude = Float.parseFloat(parts[1]);
+									hasGeo = true;
+								}
+							}
+							Event event = new Event();
+							event.startHour = startHour;
+							event.startMinute = startMinute;
+							event.endHour = endHour;
+							event.endMinute = endMinute;
+							if(hasGeo)
+							{
+								event.containGeoLocation = true;
+								event.latitude = latitude;
+								event.longitude = longitude;
+							}
+							eventList.add(event);
+							reader.close();
 						}
 						catch(FileNotFoundException e)
 						{
 							System.out.println("Unable to open \"" + input + "\" , file not found");
 						}
+					}
+				}
+				//after user are done reading, use bubble sort to sort the array list
+				bubbleSort(eventList);
+				
+				
+				for(int i = 0; i < eventList.size(); i++)
+				{
+					Event e = eventList.get(i);
+					String parts[] = null;
+					if(i < eventList.size() - 1)
+					{
+						Event ePlusOne = eventList.get(i + 1);
+						String distance = getDistance(e.longitude, e.latitude, ePlusOne.longitude, ePlusOne.latitude);
+						parts = distance.split(";");
+					}
+					String sh = String.format("%02d", e.startHour);
+					String sm = String.format("%02d", e.startMinute);
+					String eh = String.format("%02d", e.endHour);
+					String em = String.format("%02d", e.endMinute);
+					System.out.println("Event " + i + ": " + sh + ":" + sm + "-" + eh + ":" + em);
+					if(i < eventList.size() - 1)
+					{
+						DecimalFormat df = new DecimalFormat("0.00##");
+						String miles = df.format(Double.parseDouble(parts[0]));
+						String kilometers = df.format(Double.parseDouble(parts[1]));
+						System.out.println("Distance to next event: " + miles + " Miles, or " + kilometers + " Kilometers.\n");
 					}
 				}
 			}
@@ -107,5 +195,58 @@ public class ICal
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public static void bubbleSort(ArrayList<Event> eventList)
+	{
+		int i;
+		boolean flag = true;
+		Event temp; //holding variable
+		Event temp2;//holding variable
+		
+		while(flag)
+		{
+			flag = false;
+			for(i = 0; i < eventList.size() - 1; i++)
+			{
+				if(eventList.get(i).startHour > eventList.get(i + 1).startHour)
+				{
+					temp = eventList.get(i);
+					temp2 = eventList.get(i + 1);
+					eventList.set(i, temp2); 
+					eventList.set(i + 1, temp);
+					flag = true;
+				}
+				else if(eventList.get(i).startHour == eventList.get(i + 1).startHour)
+				{
+					if(eventList.get(i).startMinute > eventList.get(i + 1).startMinute)
+					{
+						temp = eventList.get(i);
+						temp2 = eventList.get(i + 1);
+						eventList.set(i, temp2); 
+						eventList.set(i + 1, temp);
+						flag = true;
+					}
+				}
+			}
+		}
+	}
+	
+	public static String getDistance(double longitude1, double latitude1, double longitude2, double latitude2)
+	{
+		double d, haverSin, firstSin, secondSin, miles, kilometers;
+		longitude1 = Math.toRadians(longitude1);
+		latitude1 = Math.toRadians(latitude1);
+		longitude2 = Math.toRadians(longitude2);
+		latitude2 = Math.toRadians(latitude2);
+		firstSin = Math.sin((latitude2 - latitude1) / 2);
+		secondSin = Math.sin((longitude2 - longitude1) / 2);
+		haverSin = (Math.pow(firstSin, 2) + Math.cos(latitude1) * Math.cos(latitude2) * Math.pow(secondSin, 2));
+		haverSin = 2 * Math.asin(Math.min(1,Math.sqrt(haverSin)));
+		d = Math.toDegrees(haverSin);
+		miles = d * 69.0468;
+		kilometers = miles * 1.60934;
+		String result = String.valueOf(miles) + ";" + String.valueOf(kilometers);
+		return result;
 	}
 }
