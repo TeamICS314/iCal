@@ -21,7 +21,15 @@ public class ICalEvent
 	public String toString()
 	{
 		String wholeEvent = EVENT_BEGIN + TZID + Event_DTStart + Event_DTEnd + Event_Classification
-				+ Event_Summary + Event_Priority + Event_GeoLocation + EVENT_END;
+				+ Event_Summary + Event_Priority;
+		if(Event_GeoLocation == null)
+		{
+			wholeEvent += EVENT_END;
+		}
+		else
+		{
+			wholeEvent += Event_GeoLocation + EVENT_END;
+		}
 		return wholeEvent;
 	}
 	
@@ -79,20 +87,34 @@ public class ICalEvent
 	
 	private String getGeoLocation(Scanner sc)
 	{
-		System.out.println("Please input the event geographic location in Latitude and Longitude: ");
-		System.out.println("Latitude(Max 6 decimal): e.g. 37.386013");
-		float latitude = sc.nextFloat();
-		sc.nextLine();
-		System.out.println("Longitude(Max 6 decimal): e.g. -122.082932");
-		float longitude = sc.nextFloat();
-		sc.nextLine();
-		
-		DecimalFormat df = new DecimalFormat(".######");
-		df.setRoundingMode(RoundingMode.UP);
-		String lat = df.format(latitude);
-		String lon = df.format(longitude);
-		
-		String geoLocation = "GEO:" + lat + ";" + lon;
-		return geoLocation + NL;
+		System.out.println("Do you want to provide geographic location? \"y\" or \"n\"");
+		String yesOrNo = sc.nextLine();
+		if(yesOrNo.equals("y"))
+		{
+			System.out.println("Please input the event geographic location in Latitude and Longitude: ");
+			System.out.println("Latitude(Max 6 decimal): e.g. 37.386013");
+			float latitude = sc.nextFloat();
+			sc.nextLine();
+			System.out.println("Longitude(Max 6 decimal): e.g. -122.082932");
+			float longitude = sc.nextFloat();
+			sc.nextLine();
+			
+			DecimalFormat df = new DecimalFormat(".######");
+			df.setRoundingMode(RoundingMode.UP);
+			String lat = df.format(latitude);
+			String lon = df.format(longitude);
+			
+			String geoLocation = "GEO:" + lat + ";" + lon;
+			return geoLocation + NL;
+		}
+		else if(yesOrNo.equals("n"))
+		{
+			return null;
+		}
+		else
+		{
+			System.out.println("ERROR with input, GeoLocation will not be contained");
+			return null;
+		}
 	}
 }

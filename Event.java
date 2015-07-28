@@ -2,6 +2,7 @@ package iCal;
 
 public class Event {
 
+	public String fromFileName = null;
 	public int startHour = -1;
 	public int startMinute = -1;
 	public int endHour = -1;

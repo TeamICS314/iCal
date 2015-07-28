@@ -142,6 +142,8 @@ public class ICal
 							event.startMinute = startMinute;
 							event.endHour = endHour;
 							event.endMinute = endMinute;
+							event.fromFileName = input;
+							//System.out.println("input = " + input);
 							if(hasGeo)
 							{
 								event.containGeoLocation = true;
@@ -191,12 +193,19 @@ public class ICal
 						DecimalFormat df = new DecimalFormat("0.00##");
 						String miles = df.format(Double.parseDouble(parts[0]));
 						String kilometers = df.format(Double.parseDouble(parts[1]));
+						//Create writer to write the info back into the event.ics file
+						//System.out.println("e.fileName: " + e.fromFileName);
+						//System.out.println("ePlusOne.fileName: " + ePlusOne.fromFileName);
+						PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(e.fromFileName,true)));
+						writer.println("COMMENT:Distance to next event: " + miles + " Miles, or " + kilometers + " Kilometers.\n");
+						writer.close();
+						
 						System.out.println("Distance to next event: " + miles + " Miles, or " + kilometers + " Kilometers.\n");
 					}
 					//else we don't have enough info to calculate the distance.
 					else
 					{
-						System.out.println("Distance to next event: UNKNOWn");
+						System.out.println("Distance to next event: UNKNOWN\n");
 					}
 				}
 			}
